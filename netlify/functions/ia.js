@@ -1,14 +1,10 @@
 // netlify/functions/ia.js
 //
 // Proxy serverless: recibe { system, messages } desde la app y llama a la API
-// de Anthropic usando la clave guardada como variable de entorno en Netlify
-// (así la clave nunca queda expuesta en el HTML/JS del navegador).
+// de Google Gemini usando la clave gratuita guardada como variable de entorno en Netlify.
 //
 // Configuración necesaria en Netlify:
-//   Site settings → Environment variables → agregar ANTHROPIC_API_KEY
-//
-// Modelo: claude-sonnet-4-6 (buena calidad/costo). Si querés algo más barato
-// para uso frecuente, cambiá a "claude-haiku-4-5-20251001".
+//   Site settings → Environment variables → agregar GEMINI_API_KEY
 
 exports.handler = async (event) => {
   const headers = {
@@ -30,14 +26,15 @@ exports.handler = async (event) => {
     };
   }
 
-  const apiKey = process.env.ANTHROPIC_API_KEY;
+  // Cambiado a la nueva variable que configuramos en Netlify
+  const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
     return {
       statusCode: 500,
       headers,
       body: JSON.stringify({
         error:
-          "Falta ANTHROPIC_API_KEY en las variables de entorno de Netlify. Andá a Site settings → Environment variables.",
+          "Falta GEMINI_API_KEY en las variables de entorno de Netlify. Andá a Site settings → Environment variables.",
       }),
     };
   }
@@ -63,46 +60,73 @@ exports.handler = async (event) => {
     };
   }
 
+  // ---- TRADUCCIÓN DE FORMATO ANTHROPIC A GOOGLE GEMINI ----
+  // 1. Mapear el historial de chat (Claude usa 'user'/'assistant', Gemini usa 'user'/'model')
+  const contents = messages.map(msg => {
+    return {
+      role: msg.role === "assistant" ? "model" : "user",
+      parts: [{ text: msg.content }]
+    };
+  });
+
+  // 2. Configurar el System Prompt si existe
+  const systemInstruction = system ? {
+    parts: [{ text: system }]
+  } : undefined;
+
   try {
-    const response = await fetch("https://api.anthropic.com/v1/messages", {
+    // Llamada al endpoint oficial del modelo gratuito Gemini 2.5 Flash
+    const response = await fetch(`https://googleapis.com{apiKey}`, {
       method: "POST",
       headers: {
-        "Content-Type": "application/json",
-        "x-api-key": apiKey,
-        "anthropic-version": "2023-06-01",
+        "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        model: "claude-sonnet-4-6",
-        max_tokens: 1000,
-        system: system || undefined,
-        messages,
-      }),
+        contents,
+        systemInstruction,
+        generationConfig: {
+          maxOutputTokens: 1000
+        }
+      })
     });
 
-    const text = await response.text();
+    const data = await response.json();
 
     if (!response.ok) {
-      // Reenviamos el detalle del error de la API para poder debuggear
       return {
         statusCode: response.status,
         headers,
         body: JSON.stringify({
-          error: `Anthropic API error (${response.status}): ${text.slice(0, 300)}`,
+          error: `Gemini API error (${response.status}): ${JSON.stringify(data)}`,
         }),
       };
     }
 
-    // La respuesta ya viene en el formato { content: [...] } que espera el frontend
+    // ---- ADAPTACIÓN DE RESPUESTA PARA TU FRONTEND ----
+    // Extraemos el texto crudo devuelto por Gemini
+    const textResult = data.candidates?.[0]?.content?.parts?.[0]?.text || "No se generó respuesta.";
+
+    // Simulamos la estructura exacta que devolvía Anthropic para que tu app frontend no falle
+    const anthropicFormatResponse = {
+      content: [
+        {
+          type: "text",
+          text: textResult
+        }
+      ]
+    };
+
     return {
       statusCode: 200,
       headers,
-      body: text,
+      body: JSON.stringify(anthropicFormatResponse),
     };
+
   } catch (err) {
     return {
       statusCode: 500,
       headers,
-      body: JSON.stringify({ error: "Error de red al llamar a Anthropic: " + err.message }),
+      body: JSON.stringify({ error: "Error de red al llamar a Gemini: " + err.message }),
     };
   }
 };
