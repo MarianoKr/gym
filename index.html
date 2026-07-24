@@ -5,12 +5,23 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="GymWork">
-<meta name="theme-color" content="#6366F1">
-<title>GymWork</title>
+<meta name="theme-color" content="#e8622c">
+<title>FORJA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Work+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-html,body{height:100%;background:#0F0F1A;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
-:root{--ac:#6366F1;--acl:#1e1f3a;--ok:#22C55E;--okl:#052e16;--warn:#F59E0B;--err:#EF4444;--purple:#7C3AED;--bg:#161625;--bg2:#1E1E30;--bg3:#252538;--bg4:#2D2D45;--txt:#F1F0FB;--txt2:#9CA3B8;--txt3:#6B7280;--brd:#2D2D45;--r:14px}
+html,body{height:100%;background:#15110d;font-family:'Work Sans',-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+:root{--ac:#e8622c;--acl:rgba(232,98,44,.16);--ok:#8fa06a;--okl:rgba(143,160,106,.16);--warn:#d9a441;--err:#b23a2e;--purple:#d9a441;--bg:#15110d;--bg2:#221b15;--bg3:#2c251e;--bg4:#3c332a;--txt:#f1e9db;--txt2:#c9beac;--txt3:#8a8073;--brd:#3c332a;--r:14px}
+body{
+  background:
+    radial-gradient(ellipse 80% 50% at 50% -10%, rgba(232,98,44,.10), transparent),
+    linear-gradient(180deg, #15110d 0%, #1a140f 100%);
+  background-attachment:fixed;
+}
+h1,h2,h3,h4,.topbar h2,.stat-num,.crono-num,.timer-count{font-family:'Oswald',sans-serif;text-transform:uppercase;letter-spacing:.03em;}
+.mono,.timer-count,.crono-num{font-family:'JetBrains Mono',monospace;letter-spacing:1px;}
 .app{max-width:430px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column;background:var(--bg)}
 .screen{flex:1;display:none;flex-direction:column;min-height:100vh}.screen.active{display:flex}
 .topbar{background:var(--bg);padding:env(safe-area-inset-top,16px) 16px 14px;border-bottom:1px solid var(--brd);display:flex;align-items:center;gap:10px;flex-shrink:0;position:sticky;top:0;z-index:10}
@@ -126,7 +137,7 @@ label{font-size:12px;color:var(--txt2);margin-bottom:5px;display:block;font-weig
       </div>
     </div>
     <div id="sesion-hoy-banner"></div>
-    <div id="hero-nuevo" style="background:linear-gradient(135deg,#4F46E5,#7C3AED);border-radius:18px;padding:18px 20px">
+    <div id="hero-nuevo" style="background:linear-gradient(135deg,#b23a2e,#e8622c);border-radius:18px;padding:18px 20px">
       <p style="color:#fff;font-size:19px;font-weight:800;margin-bottom:12px">¿Listo para entrenar?</p>
       <div style="display:flex;gap:10px">
         <button class="btn btn-p" style="flex:1;padding:11px;font-size:14px;background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.3)" onclick="nuevaTanda()">+ Nueva tanda</button>
@@ -259,7 +270,7 @@ label{font-size:12px;color:var(--txt2);margin-bottom:5px;display:block;font-weig
 <div class="screen" id="sc-ia">
   <div class="topbar"><button class="back" onclick="goHome()">←</button><h2>🤖 Entrenador IA</h2></div>
   <div class="body">
-    <div style="background:linear-gradient(135deg,#1a1a3e,#1e1f3a);border-radius:var(--r);border:1px solid var(--ac);padding:16px"><p style="font-size:13px;color:var(--txt2);line-height:1.5">Analizo tu historial y te doy recomendaciones personalizadas. Necesitás internet.</p></div>
+    <div style="background:linear-gradient(135deg,#2c1810,#221b15);border-radius:var(--r);border:1px solid var(--ac);padding:16px"><p style="font-size:13px;color:var(--txt2);line-height:1.5">Analizo tu historial y te doy recomendaciones personalizadas. Necesitás internet.</p></div>
     <div style="display:flex;flex-wrap:wrap;gap:8px">
       <button class="chip" onclick="preguntarIA('Analizá mi historial y recomendame una rutina para esta semana')">📋 Rutina sugerida</button>
       <button class="chip" onclick="preguntarIA('¿En qué ejercicios progresé y en cuáles me estanqué?')">📈 Mi progreso</button>
@@ -375,7 +386,7 @@ label{font-size:12px;color:var(--txt2);margin-bottom:5px;display:block;font-weig
       <div id="cal-estimado" style="display:none;margin-top:10px"></div>
     </div>
     <!-- Cinta -->
-    <div style="background:linear-gradient(135deg,#1a1a2e,#1e1f3a);border-radius:var(--r);border:1px solid var(--purple);padding:14px">
+    <div style="background:linear-gradient(135deg,#2c1f10,#221b15);border-radius:var(--r);border:1px solid var(--purple);padding:14px">
       <div class="row-b" style="margin-bottom:10px">
         <div><p style="font-size:15px;font-weight:700;color:var(--txt)">🏃 Cinta</p><p style="font-size:12px;color:var(--txt2)">¿Hiciste cinta hoy?</p></div>
         <button class="toggle" id="toggle-cinta" onclick="toggleCinta()"></button>
