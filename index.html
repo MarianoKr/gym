@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="GymWork">
+<meta name="apple-mobile-web-app-title" content="FORJA">
 <meta name="theme-color" content="#e8622c">
 <title>FORJA</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -22,6 +22,23 @@ body{
 }
 h1,h2,h3,h4,.topbar h2,.stat-num,.crono-num,.timer-count{font-family:'Oswald',sans-serif;text-transform:uppercase;letter-spacing:.03em;}
 .mono,.timer-count,.crono-num{font-family:'JetBrains Mono',monospace;letter-spacing:1px;}
+/* ---- Botones más sobrios: forma píldora, sombra suave en vez de bloque plano ---- */
+.btn{border-radius:999px!important;}
+.btn-p{background:var(--ac);color:var(--bg);box-shadow:0 6px 18px -8px rgba(232,98,44,.55);border:none;}
+.btn-p:active{box-shadow:0 3px 10px -6px rgba(232,98,44,.5);}
+.action{border-radius:999px;box-shadow:0 4px 14px -7px rgba(232,98,44,.55);}
+/* ---- Pestañas (Movimiento/Músculos): línea inferior en vez de bloque sólido ---- */
+.cfg-tabs{background:var(--bg2);}
+.cfg-tab{background:none;border-bottom:2px solid transparent;border-radius:0;}
+.cfg-tab.active{background:none!important;color:var(--ac);border-bottom:2px solid var(--ac);}
+/* ---- Cards con borde más discreto ---- */
+.card,.ex-card,.stat-card{border-color:rgba(241,233,219,.08);}
+/* ---- Hero de inicio, menos saturado, en tono Forja ---- */
+#hero-nuevo{background:var(--bg2)!important;border:1px solid rgba(232,98,44,.35);position:relative;overflow:hidden;}
+#hero-nuevo::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;background:var(--ac);}
+#hero-nuevo p{color:var(--txt)!important;}
+#hero-nuevo .btn-p{background:var(--ac);color:var(--bg);}
+#hero-nuevo .btn-s{background:var(--bg3)!important;border:1px solid var(--brd)!important;color:var(--txt2)!important;}
 .app{max-width:430px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column;background:var(--bg)}
 .screen{flex:1;display:none;flex-direction:column;min-height:100vh}.screen.active{display:flex}
 .topbar{background:var(--bg);padding:env(safe-area-inset-top,16px) 16px 14px;border-bottom:1px solid var(--brd);display:flex;align-items:center;gap:10px;flex-shrink:0;position:sticky;top:0;z-index:10}
@@ -100,8 +117,8 @@ label{font-size:12px;color:var(--txt2);margin-bottom:5px;display:block;font-weig
 .ia-dot:nth-child(2){animation-delay:.2s}.ia-dot:nth-child(3){animation-delay:.4s}
 @keyframes dot{0%,80%,100%{transform:scale(.6);opacity:.4}40%{transform:scale(1);opacity:1}}
 .cal-badge{display:inline-flex;align-items:center;gap:5px;background:#2d1a0e;border:1px solid var(--warn);border-radius:8px;padding:4px 10px;font-size:12px;font-weight:700;color:var(--warn)}
-.crono-general{background:linear-gradient(135deg,#0a1628,#0d1f3c);border:1.5px solid #3B82F6;border-radius:12px;padding:12px 16px;display:flex;align-items:center;justify-content:space-between}
-.crono-num{font-size:28px;font-weight:800;color:#60A5FA;letter-spacing:3px;font-variant-numeric:tabular-nums}
+.crono-general{background:var(--bg2);border:1.5px solid var(--purple);border-radius:12px;padding:12px 16px;display:flex;align-items:center;justify-content:space-between}
+.crono-num{font-size:28px;font-weight:800;color:var(--purple);letter-spacing:3px;font-variant-numeric:tabular-nums}
 .muscle-legend{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px;justify-content:center}
 .muscle-legend-item{display:flex;align-items:center;gap:4px;font-size:10px;color:var(--txt2)}
 .seg-btn{padding:8px 12px;border-radius:9px;border:1.5px solid var(--brd);background:var(--bg3);color:var(--txt2);font-size:14px;font-weight:700;cursor:pointer;transition:all .15s}
@@ -132,8 +149,8 @@ label{font-size:12px;color:var(--txt2);margin-bottom:5px;display:block;font-weig
     </div>
     <div id="crono-dia-wrap" style="display:none">
       <div class="crono-general">
-        <div><p style="font-size:10px;font-weight:700;color:#3B82F6;margin-bottom:4px">⏱ TIEMPO TOTAL EN GYM HOY</p><div class="crono-num" id="crono-dia-txt">00:00:00</div></div>
-        <button onclick="goTo('resumen-dia')" style="background:#1e3a5f;border:1px solid #3B82F6;color:#60A5FA;border-radius:9px;padding:8px 12px;font-size:12px;font-weight:700;cursor:pointer">Ver día →</button>
+        <div><p style="font-size:10px;font-weight:700;color:var(--purple);margin-bottom:4px">⏱ TIEMPO TOTAL EN GYM HOY</p><div class="crono-num" id="crono-dia-txt">00:00:00</div></div>
+        <button onclick="goTo('resumen-dia')" style="background:var(--bg3);border:1px solid var(--purple);color:var(--purple);border-radius:999px;padding:8px 12px;font-size:12px;font-weight:700;cursor:pointer">Ver día →</button>
       </div>
     </div>
     <div id="sesion-hoy-banner"></div>
@@ -153,6 +170,11 @@ label{font-size:12px;color:var(--txt2);margin-bottom:5px;display:block;font-weig
     </div>
     <input type="file" id="import-file" accept=".json" style="display:none" onchange="importarDatos(this)">
     <button onclick="resetearEmergencia()" style="background:none;border:none;color:var(--txt3);font-size:11px;text-align:center;padding:4px;cursor:pointer;width:100%">⚙️ ¿App trabada? Tocá aquí</button>
+    <div style="text-align:center;padding:2px 0 4px;cursor:pointer" onclick="abrirModal('modal-changelog')">
+      <span class="version-badge" style="background:var(--bg3);border:1px solid var(--brd);border-radius:20px;padding:4px 12px;font-size:10px;font-weight:700;color:var(--txt3)">
+        FORJA v2.5 — ¿Qué hay de nuevo?
+      </span>
+    </div>
   </div>
   <div class="bottomnav">
     <button class="bnav active" onclick="goHome()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Inicio</button>
@@ -372,7 +394,7 @@ label{font-size:12px;color:var(--txt2);margin-bottom:5px;display:block;font-weig
   <div class="body">
     <!-- Cronómetro -->
     <div class="crono-general">
-      <div><p style="font-size:10px;font-weight:700;color:#3B82F6;margin-bottom:4px">⏱ TIEMPO TOTAL EN GYM</p><div class="crono-num" id="cerrar-crono-txt">00:00:00</div></div>
+      <div><p style="font-size:10px;font-weight:700;color:var(--purple);margin-bottom:4px">⏱ TIEMPO TOTAL EN GYM</p><div class="crono-num" id="cerrar-crono-txt">00:00:00</div></div>
     </div>
     <!-- Duración editable -->
     <div class="card">
@@ -415,13 +437,6 @@ label{font-size:12px;color:var(--txt2);margin-bottom:5px;display:block;font-weig
 
 </div>
 
-<!-- VERSION BADGE -->
-<div style="text-align:center;padding:6px 0 10px;cursor:pointer" onclick="abrirModal('modal-changelog')">
-  <span style="background:var(--bg3);border:1px solid var(--brd);border-radius:20px;padding:4px 12px;font-size:10px;font-weight:700;color:var(--txt3)">
-    GymWork v2.4 — ¿Qué hay de nuevo?
-  </span>
-</div>
-
 <!-- CHANGELOG MODAL -->
 <div class="modal-overlay" id="modal-changelog" style="display:none" onclick="clickOverlay(event,'modal-changelog')">
   <div class="modal">
@@ -429,8 +444,14 @@ label{font-size:12px;color:var(--txt2);margin-bottom:5px;display:block;font-weig
     <div style="display:flex;flex-direction:column;gap:10px">
       <div style="background:var(--bg3);border-radius:10px;padding:10px 13px;border:1px solid var(--ac)">
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:3px">
-          <span style="font-size:12px;font-weight:800;color:var(--ac)">v2.4</span>
-          <span style="background:var(--ac);color:#fff;border-radius:10px;padding:1px 7px;font-size:9px;font-weight:700">ACTUAL</span>
+          <span style="font-size:12px;font-weight:800;color:var(--ac)">v2.5</span>
+          <span style="background:var(--ac);color:var(--ink,#15110d);border-radius:10px;padding:1px 7px;font-size:9px;font-weight:700">ACTUAL</span>
+        </div>
+        <p style="font-size:12px;color:var(--txt2)">Diseño FORJA, búsqueda de técnica en YouTube, diagrama muscular más claro, IA reconectada</p>
+      </div>
+      <div style="background:var(--bg3);border-radius:10px;padding:10px 13px;border:1px solid var(--brd)">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:3px">
+          <span style="font-size:12px;font-weight:800;color:var(--txt3)">v2.4</span>
         </div>
         <p style="font-size:12px;color:var(--txt2)">Versión visible, alarma sonora, cierre de día mejorado</p>
       </div>
@@ -522,10 +543,10 @@ const MN={pec:'Pecho',fdelt:'Hombro frente',rdelt:'Hombro atrás',bi:'Bíceps',t
 function muscleDiagram(ex) {
   var custom = ex.musc && ((ex.musc.p&&ex.musc.p.length) || (ex.musc.s&&ex.musc.s.length));
   var act = custom ? {p:ex.musc.p||[], s:ex.musc.s||[]} : (MUSCULOS[ex.nombre] || MUSCULOS[ex.grupo] || {p:[], s:[]});
-  var PC = '#E879F9';   // primary   – bright magenta (like anatomical diagram)
-  var SC = '#F59E0B';   // secondary – amber
-  var IC = '#2D2D45';   // inactive  – dark
-  var SK = '#3a3a5c';   // body skin
+  var PC = '#e8622c';   // primary   – ember (Forja)
+  var SC = '#d9a441';   // secondary – gold (Forja)
+  var IC = '#2c251e';   // inactive  – iron
+  var SK = '#3c332a';   // body skin
   var c  = function(id){ return act.p.indexOf(id)>=0?PC : act.s.indexOf(id)>=0?SC : IC; };
   var op = function(id){ return (act.p.indexOf(id)>=0||act.s.indexOf(id)>=0)?'0.92':'0.28'; };
   var glow = function(id){ return act.p.indexOf(id)>=0?' filter="url(#muscGlow)"':''; };
@@ -537,10 +558,10 @@ function muscleDiagram(ex) {
 
   var defs = '<defs>'
     + '<linearGradient id="skinGrad" x1="0" y1="0" x2="0" y2="1">'
-    + '<stop offset="0%" stop-color="#454569"/><stop offset="100%" stop-color="#33334f"/>'
+    + '<stop offset="0%" stop-color="#453a2d"/><stop offset="100%" stop-color="#332a20"/>'
     + '</linearGradient>'
     + '<filter id="muscGlow" x="-60%" y="-60%" width="220%" height="220%">'
-    + '<feGaussianBlur stdDeviation="1.4" result="blur"/>'
+    + '<feGaussianBlur stdDeviation="0.6" result="blur"/>'
     + '<feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>'
     + '</filter>'
     + '</defs>';
@@ -653,65 +674,39 @@ function muscleDiagram(ex) {
     '<path d="M159,140 C157,146 157,156 159,160 L171,160 C173,156 173,146 171,140Z" fill="'+c('ham')+'" opacity="'+Math.min(parseFloat(op('ham'))*0.7,0.7)+'"/>',
   ].join('');
 
-  // ── LABELS — Spanish names, only for activated muscles ────────────
-  var labelColor = '#E0D7FF';
-  var lineColor  = '#9CA3B8';
-
-  // Map muscle id → {label, fx, fy, lx, ly, side} (f=label pos, l=line end on body)
-  var LABEL_MAP = {
-    pec:        {label:'Pectorales',     fx:8,  fy:46, lx:28,ly:48, side:'front'},
-    fdelt:      {label:'Deltoides ant.', fx:1,  fy:34, lx:14,ly:38, side:'front'},
-    bi:         {label:'Bíceps',         fx:1,  fy:56, lx:14,ly:56, side:'front'},
-    abs:        {label:'Abdominales',    fx:8,  fy:70, lx:37,ly:70, side:'front'},
-    obl:        {label:'Oblicuos',       fx:6,  fy:78, lx:26,ly:74, side:'front'},
-    quad:       {label:'Cuádriceps',     fx:3,  fy:114,lx:27,ly:112,side:'front'},
-    trap:       {label:'Trapecio',       fx:105,fy:32, lx:138,ly:36, side:'back'},
-    lat:        {label:'Dorsal ancho',   fx:103,fy:56, lx:122,ly:60, side:'back'},
-    rdelt:      {label:'Deltoides post.',fx:103,fy:44, lx:118,ly:42, side:'back'},
-    tri:        {label:'Tríceps',        fx:103,fy:58, lx:114,ly:56, side:'back'},
-    lower_back: {label:'Lumbar',         fx:186,fy:70, lx:162,ly:70, side:'back'},
-    glute:      {label:'Glúteos',        fx:186,fy:105,lx:174,ly:108,side:'back'},
-    ham:        {label:'Isquiotibiales', fx:186,fy:120,lx:174,ly:122,side:'back'},
-  };
-
+  // Sin etiquetas flotantes sobre el dibujo (se recortaban y se pisaban entre sí).
+  // Los nombres de los músculos activos se muestran solo en la leyenda de abajo.
   var labels = '';
-  var allActive = act.p.concat(act.s);
-  allActive.forEach(function(id){
-    var L = LABEL_MAP[id];
-    if(!L) return;
-    var col = act.p.indexOf(id)>=0 ? PC : SC;
-    labels += '<line x1="'+L.fx+'" y1="'+L.fy+'" x2="'+L.lx+'" y2="'+L.ly+'" stroke="'+col+'" stroke-width="0.6" opacity="0.7"/>';
-    labels += '<text x="'+L.fx+'" y="'+L.fy+'" font-size="5.2" font-family="sans-serif" font-weight="700" fill="'+col+'" text-anchor="'+(L.fx<60?'start':'end')+'">'+L.label+'</text>';
-  });
 
   // ── VIEW LABELS ────────────────────────────────────────────────────
   var viewLabels =
-    '<text x="50" y="170" text-anchor="middle" font-size="6.5" fill="#6B7280" font-family="sans-serif" font-weight="600" letter-spacing="0.5">FRENTE</text>' +
-    '<text x="150" y="170" text-anchor="middle" font-size="6.5" fill="#6B7280" font-family="sans-serif" font-weight="600" letter-spacing="0.5">ESPALDA</text>';
+    '<text x="50" y="169" text-anchor="middle" font-size="7" fill="var(--txt3,#8a8073)" font-family="'+"'Oswald',sans-serif"+'" font-weight="600" letter-spacing="1">FRENTE</text>' +
+    '<text x="150" y="169" text-anchor="middle" font-size="7" fill="var(--txt3,#8a8073)" font-family="'+"'Oswald',sans-serif"+'" font-weight="600" letter-spacing="1">ESPALDA</text>';
 
   // ── DIVIDER ────────────────────────────────────────────────────────
-  var divider = '<line x1="100" y1="0" x2="100" y2="172" stroke="#4a4a6a" stroke-width="0.5" stroke-dasharray="3,3" opacity="0.5"/>';
+  var divider = '<line x1="100" y1="0" x2="100" y2="172" stroke="#4a4030" stroke-width="0.5" stroke-dasharray="3,3" opacity="0.5"/>';
 
   // ── LEGEND ────────────────────────────────────────────────────────
   var legItems = [];
   act.p.forEach(function(id){
     var name = MN[id]||id;
-    legItems.push('<div class="muscle-legend-item"><div class="legend-dot" style="background:#E879F9;box-shadow:0 0 5px #E879F9"></div>'+name+'</div>');
+    legItems.push('<div class="muscle-legend-item"><div class="legend-dot" style="background:'+PC+';box-shadow:0 0 5px '+PC+'"></div>'+name+'</div>');
   });
   act.s.forEach(function(id){
     var name = MN[id]||id;
-    legItems.push('<div class="muscle-legend-item"><div class="legend-dot" style="background:#F59E0B;box-shadow:0 0 5px #F59E0B"></div><span style="opacity:.75">'+name+' (sec.)</span></div>');
+    legItems.push('<div class="muscle-legend-item"><div class="legend-dot" style="background:'+SC+';box-shadow:0 0 5px '+SC+'"></div><span style="opacity:.75">'+name+' (sec.)</span></div>');
   });
   var legend = legItems.length
     ? '<div class="muscle-legend">'+legItems.join('')+'</div>'
     : '<div style="text-align:center;font-size:11px;color:var(--txt3);padding:4px">Sin datos para este ejercicio</div>';
 
-  return '<svg viewBox="0 0 200 173" width="100%" style="max-height:200px;display:block;background:var(--bg3);border-radius:0 0 12px 12px">'
+  return '<div style="width:100%;aspect-ratio:200/173;background:var(--bg3);border-radius:0 0 12px 12px;overflow:hidden">'
+    + '<svg viewBox="0 0 200 173" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" style="display:block">'
     + defs
     + '<g stroke="#13132580" stroke-width="0.5" stroke-linejoin="round">' + bodyFront + bodyBack + '</g>'
     + '<g stroke-linejoin="round">' + muscFront + muscBack + '</g>'
     + labels + divider + viewLabels
-    + '</svg>' + legend;
+    + '</svg></div>' + legend;
 }
 
 function switchTab(tab){
@@ -721,14 +716,18 @@ function switchTab(tab){
   document.getElementById('cfg-mus-pane').style.display=tab==='mus'?'block':'none';
 }
 
-// ═══ GIFs & UTILS ═══
-const GIF_IDS={'Press banca':'0025','Press inclinado':'0030','Aperturas':'0044','Sentadilla':'0685','Peso muerto':'0368','Prensa':'0484','Femoral máquina':'0492','Zancadas':'0447','Dominadas':'0651','Remo polea':'0617','Remo barra':'0042','Curl bíceps':'0285','Curl martillo':'0288','Hombro mancuerna':'0526','Press militar':'0536','Elevaciones laterales':'0628','Tríceps polea':'0703','Press francés':'0396','Fondos':'0226','Crunches':'0211','Plancha':'0572'};
+// ═══ VIDEO (búsqueda en YouTube) & UTILS ═══
+// Nota: la vieja API de GIFs (v2.exercisedb.io) quedó atrás de un login de pago y
+// ya no responde a pedidos directos desde el navegador, por eso el spinner giraba
+// para siempre. En vez de depender de una API externa frágil, mostramos un ícono
+// y un botón que busca la técnica correcta en YouTube (igual que hace Forja).
 const FB={pecho:'🏋️',piernas:'🦵',espalda:'💪',hombro:'🏅',biceps:'💪',triceps:'👊',core:'🔥',general:'⚡'};
-function gifUrl(ex){const id=GIF_IDS[ex.nombre];return id?`https://v2.exercisedb.io/image/${id}`:null;}
+function gifUrl(ex){return null;}
+function videoSearchUrl(nombre){return `https://www.youtube.com/results?search_query=${encodeURIComponent('como hacer '+nombre+' técnica correcta')}`;}
 function gifImg(ex,size,radius='10px'){
-  const url=gifUrl(ex),fb=FB[ex.grupo]||'⚡';
+  const fb=FB[ex.grupo]||'⚡';
   const st=`width:${size};height:${size};border-radius:${radius};background:var(--bg3);flex-shrink:0;overflow:hidden;display:flex;align-items:center;justify-content:center;border:1px solid var(--brd)`;
-  return url?`<div style="${st}"><img src="${url}" style="width:100%;height:100%;object-fit:cover" onerror="this.parentNode.innerHTML='<span style=\\'font-size:20px\\'>${fb}</span>'" loading="lazy"></div>`:`<div style="${st}"><span style="font-size:20px">${fb}</span></div>`;
+  return `<div style="${st}"><span style="font-size:20px">${fb}</span></div>`;
 }
 function calcCal(pw,mf,mc,mr){return Math.round(3.5*pw*(mf/60)+3.5*pw*(mc/60)+8*pw*(mr/60));}
 function actualizarCal(){
@@ -1045,7 +1044,7 @@ function renderResumenDia(){
   ses.tandas.forEach((t,ti)=>{txt+=`\nTanda ${ti+1}:\n`;t.ejercicios.forEach(e=>{txt+=`• ${e.nombre}: `;if(e.series&&e.series.length)txt+=e.series.map(s=>`${s.reps}×${s.peso||0}kg`).join(' / ');txt+='\n';});});
   b.innerHTML=`
     <div style="background:var(--okl);border:1px solid #166534;border-radius:12px;padding:14px"><p style="font-size:12px;font-weight:700;color:var(--ok)">🟢 ${fechaStr(DB.fechaActual)}</p><p style="font-size:14px;color:var(--txt);margin-top:2px">${ses.tandas.length} tanda${ses.tandas.length!==1?'s':''}</p></div>
-    <div class="crono-general"><div><p style="font-size:10px;font-weight:700;color:#3B82F6;margin-bottom:4px">⏱ TIEMPO HOY</p><div class="crono-num" id="crono-resumen-txt">--:--:--</div></div></div>
+    <div class="crono-general"><div><p style="font-size:10px;font-weight:700;color:var(--purple);margin-bottom:4px">⏱ TIEMPO HOY</p><div class="crono-num" id="crono-resumen-txt">--:--:--</div></div></div>
     <p class="sec">Ejercicios (tocá 🗑 para eliminar)</p>
     ${ses.tandas.map((t,ti)=>`<p style="font-size:12px;font-weight:700;color:var(--txt3);margin-bottom:6px">TANDA ${ti+1}</p>${t.ejercicios.map((e,ei)=>{const mp=e.series?Math.max(...e.series.map(s=>s.peso||0)):0;return`<div class="card" style="margin-bottom:8px"><div class="row-b"><div class="row" style="gap:10px">${gifImg(e,'44px')}<div><p style="font-weight:700;font-size:14px;color:var(--txt)">${e.nombre}</p><p style="font-size:12px;color:var(--txt2)">${e.series?e.series.length:0} series${mp?' · hasta '+mp+'kg':''}</p><div style="display:flex;flex-wrap:wrap;gap:3px;margin-top:4px">${(e.series||[]).map((s,si)=>`<span style="font-size:10px;background:var(--bg3);border:1px solid var(--brd);border-radius:4px;padding:2px 5px;color:var(--txt2)">${si+1}: ${s.reps}×${s.peso||0}kg</span>`).join('')}</div></div></div><button onclick="eliminarExDia(${ti},${ei})" style="background:none;border:none;cursor:pointer;color:var(--err);font-size:22px;padding:4px">🗑</button></div></div>`;}).join('')}`).join('')}
     <p class="sec">📤 Para el profe</p>
@@ -1113,9 +1112,12 @@ function selEx(id){
   const ex=DB.ejercicios.find(e=>e.id===id);if(!ex)return;
   exEnConfig={...ex};
   document.getElementById('cfg-titulo').textContent=ex.nombre;
-  const url=gifUrl(ex),fb=FB[ex.grupo]||'⚡';
+  const fb=FB[ex.grupo]||'⚡';
   const gp=document.getElementById('cfg-gif-pane');
-  gp.innerHTML=url?`<div class="spin" style="width:32px;height:32px;border-width:3px;position:absolute"></div><img src="${url}" style="display:none;width:100%;height:100%;object-fit:contain" onload="this.style.display='block';this.previousSibling.style.display='none'" onerror="this.innerHTML='<span style=\\'font-size:60px\\'>${fb}</span>'">`:`<span style="font-size:60px">${fb}</span>`;
+  gp.innerHTML=`<div style="display:flex;flex-direction:column;align-items:center;gap:14px;padding:20px">
+    <span style="font-size:52px;opacity:.85">${fb}</span>
+    <a href="${videoSearchUrl(ex.nombre)}" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:8px;background:var(--ac);color:var(--bg);border-radius:999px;padding:11px 20px;font-size:13px;font-weight:700;text-decoration:none;box-shadow:0 6px 18px -8px rgba(232,98,44,.55)">▶ Ver técnica en YouTube</a>
+  </div>`;
   document.getElementById('cfg-mus-pane').innerHTML=muscleDiagram(ex);
   switchTab('gif');
   document.getElementById('cfg-series').value=3;document.getElementById('cfg-reps').value='';document.getElementById('cfg-barra').value='';
@@ -1246,7 +1248,16 @@ async function preguntarIA(q){
   c.scrollTop=c.scrollHeight;iaConv.push({role:'user',content:q});
   try{
     const r=await fetch('/.netlify/functions/ia',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({system:buildCtxIA(),messages:iaConv})});
-    const data=await r.json();const t=document.getElementById('ia-t');if(t)t.remove();
+    const raw=await r.text();
+    let data;
+    try{data=JSON.parse(raw);}
+    catch(parseErr){
+      // La función ni siquiera devolvió JSON: casi siempre es un 404 (la función
+      // no está desplegada en Netlify) o un error del propio Netlify, no de la IA.
+      if(r.status===404) throw new Error('La función de IA no está desplegada en Netlify (404). Revisá que la carpeta netlify/functions/ia.js esté subida y que el sitio se haya vuelto a desplegar.');
+      throw new Error(`Respuesta inesperada del servidor (HTTP ${r.status}). Detalle: ${raw.slice(0,120)}`);
+    }
+    const t=document.getElementById('ia-t');if(t)t.remove();
     if(data.error){throw new Error(data.error);}
     const txt=data.content?data.content.filter(x=>x.type==='text').map(x=>x.text).join(''):'No pude procesar.';
     iaConv.push({role:'assistant',content:txt});
