@@ -1,14 +1,13 @@
 // netlify/functions/ia.js
 // 
 // =========================================================
-// CONTROL DE VERSIÓN MASTER: 4.0 (NATIVA Y AUTOCONTENIDA)
+// CONTROL DE VERSIÓN MASTER: 4.1 (URL PRO-FIX)
 // PROVEEDOR: Google Gemini API (Sin librerías externas)
 // =========================================================
 
-// Usamos el módulo HTTPS nativo de Node.js para asegurar compatibilidad total en Netlify
 const https = require("https");
 
-const VERSION_MASTER = "4.0 - Conexión Nativa HTTPS (Estable)";
+const VERSION_MASTER = "4.1 - Conexión Nativa HTTPS (Dirección Corregida)";
 
 exports.handler = async (event) => {
   const headers = {
@@ -18,7 +17,6 @@ exports.handler = async (event) => {
     "Access-Control-Allow-Methods": "POST, OPTIONS",
   };
 
-  // Manejo de Preflight CORS
   if (event.httpMethod === "OPTIONS") {
     return { statusCode: 204, headers, body: "" };
   }
@@ -61,22 +59,20 @@ exports.handler = async (event) => {
     };
   }
 
-  // Mapeo del historial al formato oficial de Google (user / model)
   const contents = messages.map(msg => ({
     role: msg.role === "assistant" ? "model" : "user",
     parts: [{ text: msg.content || "" }]
   }));
 
-  // Payload estructurado para la API de Gemini
   const apiPayload = JSON.stringify({
     contents,
     systemInstruction: system ? { parts: [{ text: system }] } : undefined,
     generationConfig: { maxOutputTokens: 1000 }
   });
 
-  // Opciones de conexión HTTP nativa
+  // CORRECCIÓN AQUÍ: Se eliminó el "://" que causaba el ENOTFOUND
   const options = {
-    hostname: "://googleapis.com",
+    hostname: "generativelanguage.googleapis.com",
     path: `/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
     method: "POST",
     headers: {
@@ -85,7 +81,6 @@ exports.handler = async (event) => {
     }
   };
 
-  // Envolvemos la petición nativa en una Promesa para cumplir con la arquitectura async/await de Netlify
   return new Promise((resolve) => {
     const req = https.request(options, (res) => {
       let responseBody = "";
@@ -106,7 +101,6 @@ exports.handler = async (event) => {
             return;
           }
 
-          // Extracción segura del texto generado por Gemini
           const textResult = data?.candidates?.[0]?.content?.parts?.[0]?.text || "Respuesta vacía del servidor.";
           
           resolve({
@@ -133,13 +127,11 @@ exports.handler = async (event) => {
       });
     });
 
-    // Enviamos los datos y cerramos la conexión HTTP
     req.write(apiPayload);
     req.end();
   });
 };
 
-// Función auxiliar para imitar estrictamente la estructura exacta de Anthropic
 function emulateAnthropicResponse(text) {
   return {
     id: `msg_gemini_master_${Date.now()}`,
