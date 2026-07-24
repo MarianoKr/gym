@@ -1228,7 +1228,18 @@ function guardarTandaFin(){
 }
 function salirEntrenar(){pararTimerT();timerTStart=null;goHome();}
 
-// ═══ IA ═══
+// ==========================================
+// ═══ SISTEMA IA CON MEMORIA LOCAL ACTIVA ═══
+// ==========================================
+
+// Variable global del chat cargada desde la memoria del teléfono si ya existe
+let iaConv = [];
+try {
+  iaConv = JSON.parse(localStorage.getItem('gymwork_chat_history') || '[]');
+} catch(e) {
+  iaConv = [];
+}
+
 function buildCtxIA(){
   const pw=DB.pesoCorporal.length?DB.pesoCorporal[DB.pesoCorporal.length-1].peso:null;
   const mes=new Date().toISOString().slice(0,7),esteMes=DB.historial.filter(r=>r.fecha.startsWith(mes)).length;
@@ -1240,30 +1251,87 @@ function buildCtxIA(){
   const hoy=getSesionHoy(),hoyStr=hoy?`\nHoy:\n${hoy.tandas.map((t,i)=>`  Tanda ${i+1}: ${t.ejercicios.map(e=>e.nombre).join(', ')}`).join('\n')}`:'' ;
   return `Sos el entrenador de Mariano. Respondé en español, concreto y amigable. Máx 250 palabras.\n\nDatos:\n- Peso: ${pw?pw+'kg':'no registrado'}\n- Sesiones: ${DB.historial.length} totales, ${esteMes} este mes\n- Top ejercicios: ${top||'sin datos'}\n- Últimas sesiones:\n${ult||'  sin datos'}\n- Progresión:\n${prStr||'  sin datos'}${hoyStr}`;
 }
-function renderIA(){const c=document.getElementById('ia-chat');if(!iaConv.length)c.innerHTML=`<div class="ia-bubble ia">¡Hola Mariano! 💪 Soy tu entrenador IA. Tengo acceso a tu historial y te doy recomendaciones personalizadas. ¿Qué querés saber?</div>`;}
+
+function renderIA(){
+  const c=document.getElementById('ia-chat');
+  if(!iaConv.length) {
+    c.innerHTML=`<div class="ia-bubble ia">¡Hola Mariano! 💪 Soy tu entrenador IA. Tengo acceso a tu historial y te doy recomendaciones personalizadas. ¿Qué querés saber?</div>`;
+  } else {
+    // Si ya hay un historial guardado en el teléfono, lo pintamos de inmediato en la pantalla al entrar
+    c.innerHTML = '';
+    iaConv.forEach(msg => {
+      const bubbleClass = msg.role === 'user' ? 'user' : 'ia';
+      const formattedText = msg.content.replace(/\n/g, '<br>');
+      c.innerHTML += `<div class="ia-bubble ${bubbleClass}">${formattedText}</div>`;
+    });
+    // Agregamos un pequeño botón estético al final por si querés vaciar la memoria del chat
+    c.innerHTML += `<div style="text-align:center;margin-top:10px;"><button onclick="borrarHistorialIA()" style="background:none;border:none;color:var(--err);font-size:11px;cursor:pointer;opacity:0.7;">🗑️ Borrar memoria del chat</button></div>`;
+    c.scrollTop=c.scrollHeight;
+  }
+}
+
+// Función máster auxiliar para vaciar la memoria del chat cuando Mariano lo desee
+function borrarHistorialIA() {
+  if(confirm("¿Querés borrar todo el historial de conversación con el entrenador?")) {
+    localStorage.removeItem('gymwork_chat_history');
+    iaConv = [];
+    renderIA();
+  }
+}
+
 async function preguntarIA(q){
   document.getElementById('ia-input').value='';
   const c=document.getElementById('ia-chat');
+  
+  // Si es el primer mensaje, limpiamos el saludo inicial plano
+  if(c.innerHTML.includes("¡Hola Mariano! 💪 Soy tu entrenador IA")) {
+    c.innerHTML = '';
+  }
+  
   c.innerHTML+=`<div class="ia-bubble user">${q}</div><div class="ia-typing" id="ia-t"><div class="ia-dot"></div><div class="ia-dot"></div><div class="ia-dot"></div></div>`;
-  c.scrollTop=c.scrollHeight;iaConv.push({role:'user',content:q});
+  c.scrollTop=c.scrollHeight;
+  
+  iaConv.push({role:'user',content:q});
+  
+  // Guardamos preventivamente la pregunta del usuario en el disco local
+  try { localStorage.setItem('gymwork_chat_history', JSON.stringify(iaConv)); } catch(e){}
+
   try{
     const r=await fetch('/.netlify/functions/ia',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({system:buildCtxIA(),messages:iaConv})});
     const raw=await r.text();
     let data;
     try{data=JSON.parse(raw);}
     catch(parseErr){
-      // La función ni siquiera devolvió JSON: casi siempre es un 404 (la función
-      // no está desplegada en Netlify) o un error del propio Netlify, no de la IA.
       if(r.status===404) throw new Error('La función de IA no está desplegada en Netlify (404). Revisá que la carpeta netlify/functions/ia.js esté subida y que el sitio se haya vuelto a desplegar.');
       throw new Error(`Respuesta inesperada del servidor (HTTP ${r.status}). Detalle: ${raw.slice(0,120)}`);
     }
     const t=document.getElementById('ia-t');if(t)t.remove();
     if(data.error){throw new Error(data.error);}
-    const txt=data.content?data.content.filter(x=>x.type==='text').map(x=>x.text).join(''):'No pude procesar.';
+    
+    // Extracción limpia y segura del mensaje
+    const txt=data.content ? data.content.filter(x=>x.type==='text').map(x=>x.text).join('') : 'No pude procesar.';
+    
     iaConv.push({role:'assistant',content:txt});
-    c.innerHTML+=`<div class="ia-bubble ia">${txt.replace(/\n/g,'<br>')}</div>`;c.scrollTop=c.scrollHeight;
-  }catch(e){const t=document.getElementById('ia-t');if(t)t.remove();c.innerHTML+=`<div class="ia-bubble ia" style="border-color:var(--err)">⚠️ ${e.message||'Necesitás internet.'}</div>`;c.scrollTop=c.scrollHeight;}
+    
+    // GUARDADO EXPLICITO EN EL DISPOSITIVO: Salvamos la conversación actualizada con la respuesta de la IA
+    try {
+      localStorage.setItem('gymwork_chat_history', JSON.stringify(iaConv));
+    } catch(errStorage) {
+      console.error("Límite de almacenamiento local excedido u opción deshabilitada.");
+    }
+
+    c.innerHTML+=`<div class="ia-bubble ia">${txt.replace(/\n/g,'<br>')}</div>`;
+    
+    // Refrescamos la vista para inyectar correctamente el botón de borrado dinámico abajo de todo
+    renderIA();
+    
+  }catch(e){
+    const t=document.getElementById('ia-t');if(t)t.remove();
+    c.innerHTML+=`<div class="ia-bubble ia" style="border-color:var(--err)">⚠️ ${e.message||'Necesitás internet.'}</div>`;
+    c.scrollTop=c.scrollHeight;
+  }
 }
+
 function enviarIA(){const q=document.getElementById('ia-input').value.trim();if(q)preguntarIA(q);}
 
 // ═══ HISTORIAL ═══
