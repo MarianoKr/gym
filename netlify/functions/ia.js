@@ -1,10 +1,17 @@
 // netlify/functions/ia.js
+// 
+// VERSIÓN ACTUAL DEL ARCHIVO: 2.1 (Parche de Enrutamiento de Red IPv4)
 //
-// Proxy serverless: recibe { system, messages } desde la app y llama a la API
-// de Google Gemini usando la clave gratuita guardada como variable de entorno en Netlify.
-//
-// Configuración necesaria en Netlify:
-//   Site settings → Environment variables → agregar GEMINI_API_KEY
+// Proxy serverless optimizado para Google Gemini en Netlify.
+
+// CORRECCIÓN CRÍTICA DE RED: Forzamos al resolvedor DNS de Node.js en Netlify
+// a buscar siempre direcciones IPv4 primero para evitar el bloqueo del 'fetch failed'.
+const dns = require('dns');
+if (typeof dns.setDefaultResultOrder === 'function') {
+  dns.setDefaultResultOrder('ipv4first');
+}
+
+const VERSION_ACTUAL = "2.1 - Modo Gemini IPv4 Estable";
 
 exports.handler = async (event) => {
   const headers = {
@@ -22,19 +29,18 @@ exports.handler = async (event) => {
     return {
       statusCode: 405,
       headers,
-      body: JSON.stringify({ error: "Método no permitido" }),
+      body: JSON.stringify({ error: "Método no permitido", version: VERSION_ACTUAL }),
     };
   }
 
-  // Cambiado a la nueva variable que configuramos en Netlify
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
     return {
       statusCode: 500,
       headers,
       body: JSON.stringify({
-        error:
-          "Falta GEMINI_API_KEY en las variables de entorno de Netlify. Andá a Site settings → Environment variables.",
+        error: "Falta GEMINI_API_KEY en las variables de entorno de Netlify.",
+        version: VERSION_ACTUAL
       }),
     };
   }
@@ -46,7 +52,7 @@ exports.handler = async (event) => {
     return {
       statusCode: 400,
       headers,
-      body: JSON.stringify({ error: "Body inválido, no es JSON." }),
+      body: JSON.stringify({ error: "Body inválido, no es JSON.", version: VERSION_ACTUAL }),
     };
   }
 
@@ -56,64 +62,50 @@ exports.handler = async (event) => {
     return {
       statusCode: 400,
       headers,
-      body: JSON.stringify({ error: "Falta 'messages' en la solicitud." }),
+      body: JSON.stringify({ error: "Falta 'messages' en la solicitud.", version: VERSION_ACTUAL }),
     };
   }
 
-  // ---- TRADUCCIÓN DE FORMATO ANTHROPIC A GOOGLE GEMINI ----
-  // 1. Mapear el historial de chat (Claude usa 'user'/'assistant', Gemini usa 'user'/'model')
-  const contents = messages.map(msg => {
-    return {
-      role: msg.role === "assistant" ? "model" : "user",
-      parts: [{ text: msg.content }]
-    };
-  });
+  // Estructura de historial mapeada para Gemini
+  const contents = messages.map(msg => ({
+    role: msg.role === "assistant" ? "model" : "user",
+    parts: [{ text: msg.content }]
+  }));
 
-  // 2. Configurar el System Prompt si existe
-  const systemInstruction = system ? {
-    parts: [{ text: system }]
-  } : undefined;
+  const systemInstruction = system ? { parts: [{ text: system }] } : undefined;
 
   try {
-    // Llamada al endpoint oficial del modelo gratuito Gemini 2.5 Flash
-    const response = await fetch(`https://googleapis.com{apiKey}`, {
+    const url = `https://googleapis.com{apiKey}`;
+    
+    const response = await fetch(url, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         contents,
         systemInstruction,
-        generationConfig: {
-          maxOutputTokens: 1000
-        }
+        generationConfig: { maxOutputTokens: 1000 }
       })
     });
 
-    const data = await response.json();
-
     if (!response.ok) {
+      const errorText = await response.text();
       return {
         statusCode: response.status,
         headers,
-        body: JSON.stringify({
-          error: `Gemini API error (${response.status}): ${JSON.stringify(data)}`,
+        body: JSON.stringify({ 
+          error: `Error de Gemini API: ${errorText}`, 
+          version: VERSION_ACTUAL 
         }),
       };
     }
 
-    // ---- ADAPTACIÓN DE RESPUESTA PARA TU FRONTEND ----
-    // Extraemos el texto crudo devuelto por Gemini
-    const textResult = data.candidates?.[0]?.content?.parts?.[0]?.text || "No se generó respuesta.";
+    const data = await response.json();
+    const textResult = data?.candidates?.[0]?.content?.parts?.[0]?.text || "No se pudo generar una respuesta.";
 
-    // Simulamos la estructura exacta que devolvía Anthropic para que tu app frontend no falle
+    // Estructura adaptada para tu frontend que incluye la versión del backend para verificar
     const anthropicFormatResponse = {
-      content: [
-        {
-          type: "text",
-          text: textResult
-        }
-      ]
+      content: [{ type: "text", text: textResult }],
+      backend_version: VERSION_ACTUAL
     };
 
     return {
@@ -126,7 +118,11 @@ exports.handler = async (event) => {
     return {
       statusCode: 500,
       headers,
-      body: JSON.stringify({ error: "Error de red al llamar a Gemini: " + err.message }),
+      body: JSON.stringify({ 
+        error: "Error de red al llamar a Gemini: " + err.message,
+        details: err.cause ? err.cause.message : "Sin detalles adicionales",
+        version: VERSION_ACTUAL // Así sabrás si el error lo da el archivo viejo o el nuevo
+      }),
     };
   }
 };
