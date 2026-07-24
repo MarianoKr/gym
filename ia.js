@@ -1,14 +1,6 @@
 // netlify/functions/ia.js
 //
-// Proxy serverless: recibe { system, messages } desde la app y llama a la API
-// de Anthropic usando la clave guardada como variable de entorno en Netlify
-// (así la clave nunca queda expuesta en el HTML/JS del navegador).
-//
-// Configuración necesaria en Netlify:
-//   Site settings → Environment variables → agregar ANTHROPIC_API_KEY
-//
-// Modelo: claude-sonnet-4-6 (buena calidad/costo). Si querés algo más barato
-// para uso frecuente, cambiá a "claude-haiku-4-5-20251001".
+// Proxy serverless optimizado para Google Gemini en Netlify.
 
 exports.handler = async (event) => {
   const headers = {
@@ -30,14 +22,13 @@ exports.handler = async (event) => {
     };
   }
 
-  const apiKey = process.env.ANTHROPIC_API_KEY;
+  const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
     return {
       statusCode: 500,
       headers,
       body: JSON.stringify({
-        error:
-          "Falta ANTHROPIC_API_KEY en las variables de entorno de Netlify. Andá a Site settings → Environment variables.",
+        error: "Falta GEMINI_API_KEY en las variables de entorno de Netlify.",
       }),
     };
   }
@@ -63,46 +54,62 @@ exports.handler = async (event) => {
     };
   }
 
+  // Estructura de historial mapeada para Gemini
+  const contents = messages.map(msg => ({
+    role: msg.role === "assistant" ? "model" : "user",
+    parts: [{ text: msg.content }]
+  }));
+
+  const systemInstruction = system ? { parts: [{ text: system }] } : undefined;
+
   try {
-    const response = await fetch("https://api.anthropic.com/v1/messages", {
+    // Usamos el endpoint HTTP v1beta estable de Google Gemini
+    const url = `https://googleapis.com{apiKey}`;
+    
+    const response = await fetch(url, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-api-key": apiKey,
-        "anthropic-version": "2023-06-01",
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        model: "claude-sonnet-4-6",
-        max_tokens: 1000,
-        system: system || undefined,
-        messages,
-      }),
+        contents,
+        systemInstruction,
+        generationConfig: { maxOutputTokens: 1000 }
+      })
     });
 
-    const text = await response.text();
-
     if (!response.ok) {
-      // Reenviamos el detalle del error de la API para poder debuggear
+      const errorText = await response.text();
       return {
         statusCode: response.status,
         headers,
-        body: JSON.stringify({
-          error: `Anthropic API error (${response.status}): ${text.slice(0, 300)}`,
-        }),
+        body: JSON.stringify({ error: `Error de Gemini API: ${errorText}` }),
       };
     }
 
-    // La respuesta ya viene en el formato { content: [...] } que espera el frontend
+    const data = await response.json();
+    
+    // Extracción ultra segura del texto devuelto por Gemini
+    const textResult = data?.candidates?.[0]?.content?.parts?.[0]?.text || "No se pudo generar una respuesta.";
+
+    // Estructura idéntica al formato clásico de Anthropic para tu frontend
+    const anthropicFormatResponse = {
+      content: [{ type: "text", text: textResult }]
+    };
+
     return {
       statusCode: 200,
       headers,
-      body: text,
+      body: JSON.stringify(anthropicFormatResponse),
     };
+
   } catch (err) {
+    // Si vuelve a fallar, exponemos la causa real para diagnosticar de inmediato
     return {
       statusCode: 500,
       headers,
-      body: JSON.stringify({ error: "Error de red al llamar a Anthropic: " + err.message }),
+      body: JSON.stringify({ 
+        error: "Error de red al llamar a Gemini: " + err.message,
+        details: err.cause ? err.cause.message : "Sin detalles adicionales"
+      }),
     };
   }
 };
