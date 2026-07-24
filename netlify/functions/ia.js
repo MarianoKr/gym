@@ -1,14 +1,14 @@
 // netlify/functions/ia.js
 // 
 // ==========================================
-// CONTROL DE VERSIÓN MASTER: 3.1 (PRO-DOCKER)
+// CONTROL DE VERSIÓN MASTER: 3.2 (EMULACIÓN)
 // PROVEEDOR: Google Gemini AI SDK Estable
 // ==========================================
 
-// Importamos el SDK oficial de Google
+// Importación del SDK oficial de Google
 const { GoogleGenAI } = require("@google/generative-ai");
 
-const VERSION_MASTER = "3.1 - SDK Gemini Producción (Estable)";
+const VERSION_MASTER = "3.2 - Emulación Anthropic Estricta";
 
 exports.handler = async (event) => {
   const headers = {
@@ -18,7 +18,6 @@ exports.handler = async (event) => {
     "Access-Control-Allow-Methods": "POST, OPTIONS",
   };
 
-  // 1. Control de Preflight CORS
   if (event.httpMethod === "OPTIONS") {
     return { statusCode: 204, headers, body: "" };
   }
@@ -27,24 +26,27 @@ exports.handler = async (event) => {
     return {
       statusCode: 405,
       headers,
-      body: JSON.stringify({ error: "Método no permitido", version: VERSION_MASTER }),
+      body: JSON.stringify({ error: "Método no permitido" }),
     };
   }
 
-  // 2. Validación de Credenciales
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
+    // Si falta la clave, devolvemos el texto simulando que habla la IA para decírtelo directamente en pantalla
     return {
-      statusCode: 500,
+      statusCode: 200,
       headers,
       body: JSON.stringify({
-        error: "Falta GEMINI_API_KEY en Netlify.",
-        version: VERSION_MASTER
+        id: "msg_error_env",
+        type: "message",
+        role: "assistant",
+        model: "claude-sonnet-4-6-emulated",
+        content: [{ type: "text", text: "⚙️ Falta configurar la variable 'GEMINI_API_KEY' en tu panel de Netlify." }],
+        usage: { input_tokens: 0, output_tokens: 0 }
       }),
     };
   }
 
-  // 3. Parseo Seguro del Body
   let payload;
   try {
     payload = JSON.parse(event.body || "{}");
@@ -52,31 +54,23 @@ exports.handler = async (event) => {
     return {
       statusCode: 400,
       headers,
-      body: JSON.stringify({ error: "JSON inválido enviado por el cliente.", version: VERSION_MASTER }),
+      body: JSON.stringify({ error: "JSON inválido." }),
     };
   }
 
   const { system, messages } = payload;
 
-  if (!Array.isArray(messages) || messages.length === 0) {
-    return {
-      statusCode: 400,
-      headers,
-      body: JSON.stringify({ error: "Falta el arreglo 'messages'.", version: VERSION_MASTER }),
-    };
-  }
-
   try {
-    // Inicialización explícita y robusta del SDK de Google
+    // Inicialización del cliente unificado de Google
     const ai = new GoogleGenAI({ apiKey: apiKey });
 
-    // Mapeo seguro del historial de mensajes al formato de Google (user / model)
+    // Transformación limpia del historial al esquema de Google (user / model)
     const contents = messages.map(msg => ({
       role: msg.role === "assistant" ? "model" : "user",
       parts: [{ text: msg.content || "" }]
     }));
 
-    // Ejecución de la solicitud usando la API unificada
+    // Ejecución de llamada con el modelo gratuito de alta velocidad
     const response = await ai.models.generateContent({
       model: "gemini-2.5-flash",
       contents: contents,
@@ -86,39 +80,48 @@ exports.handler = async (event) => {
       }
     });
 
-    // Extracción limpia del string de respuesta
-    const textResult = response.text || "Respuesta vacía.";
+    const textResult = response.text || "Respuesta vacía del servidor.";
 
-    // Estructura idéntica al formato clásico de Anthropic para que tu frontend no diga "No pude procesar."
-    const responsePayload = {
+    // CLONACIÓN ESTRICTA DEL ESQUEMA ORIGINAL DE RESPUESTA DE ANTHROPIC (CLAUDE)
+    // Tu frontend lee propiedades específicas como 'id', 'role' o 'content[0].text'.
+    // Al rellenar este molde idéntico, el frontend procesará el mensaje sin lanzar el error visual.
+    const anthropicPayloadMock = {
+      id: `msg_gemini_${Date.now()}`,
+      type: "message",
+      role: "assistant",
+      model: "claude-sonnet-4-6-emulated", // Engañamos al frontend haciéndole creer que es Claude
       content: [
         {
           type: "text",
           text: textResult
         }
       ],
+      stop_reason: "end_turn",
+      stop_sequence: null,
+      usage: {
+        input_tokens: 100,
+        output_tokens: 200
+      },
       backend_version: VERSION_MASTER
     };
 
     return {
       statusCode: 200,
       headers,
-      body: JSON.stringify(responsePayload),
+      body: JSON.stringify(anthropicPayloadMock),
     };
 
   } catch (err) {
-    // Captura explícita del error para que no muera en silencio el servidor
+    // Si ocurre un error de ejecución, también se lo inyectamos con formato limpio
     return {
-      statusCode: 200, // Forzamos 200 para inyectar el error directamente en el texto del chat y poder leerlo
+      statusCode: 200, 
       headers,
       body: JSON.stringify({
-        content: [
-          {
-            type: "text",
-            text: `[Error Servidor V3.1]: ${err.message}. Verifica las variables en Netlify.`
-          }
-        ],
-        backend_version: VERSION_MASTER
+        id: "msg_error_catch",
+        type: "message",
+        role: "assistant",
+        content: [{ type: "text", text: `🚨 [Error Servidor V3.2]: ${err.message}. Revisa la consola.` }],
+        usage: { input_tokens: 0, output_tokens: 0 }
       }),
     };
   }
