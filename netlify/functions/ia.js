@@ -1,13 +1,13 @@
 // netlify/functions/ia.js
 // 
 // =========================================================
-// CONTROL DE VERSIÓN MASTER: 4.1 (URL PRO-FIX)
-// PROVEEDOR: Google Gemini API (Sin librerías externas)
+// CONTROL DE VERSIÓN MASTER: 4.2 (MODELO GEMINI 3 MIGRADO)
+// PROVEEDOR: Google Gemini API Nativa (Modelo 2026 Activo)
 // =========================================================
 
 const https = require("https");
 
-const VERSION_MASTER = "4.1 - Conexión Nativa HTTPS (Dirección Corregida)";
+const VERSION_MASTER = "4.2 - Conexión Nativa HTTPS (Gemini 3.6 Flash)";
 
 exports.handler = async (event) => {
   const headers = {
@@ -70,10 +70,10 @@ exports.handler = async (event) => {
     generationConfig: { maxOutputTokens: 1000 }
   });
 
-  // CORRECCIÓN AQUÍ: Se eliminó el "://" que causaba el ENOTFOUND
+  // MIGRACIÓN MÁSTER: Apuntamos al endpoint del modelo gemini-3.6-flash (o gemini-3.5-flash-lite)
   const options = {
     hostname: "generativelanguage.googleapis.com",
-    path: `/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
+    path: `/v1beta/models/gemini-3.6-flash:generateContent?key=${apiKey}`,
     method: "POST",
     headers: {
       "Content-Type": "application/json",
