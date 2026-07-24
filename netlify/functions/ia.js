@@ -1,14 +1,14 @@
 // netlify/functions/ia.js
 // 
 // ==========================================
-// CONTROL DE VERSIÓN MASTER: 3.0 (PRO-DOCKER)
-// PROVEEDOR: Google Gemini AI SDK Oficial
+// CONTROL DE VERSIÓN MASTER: 3.1 (PRO-DOCKER)
+// PROVEEDOR: Google Gemini AI SDK Estable
 // ==========================================
 
-// Importamos el SDK oficial de Google para evitar errores de red y de fetch clásico
+// Importamos el SDK oficial de Google
 const { GoogleGenAI } = require("@google/generative-ai");
 
-const VERSION_MASTER = "3.0 - SDK Oficial Gemini (Estable)";
+const VERSION_MASTER = "3.1 - SDK Gemini Producción (Estable)";
 
 exports.handler = async (event) => {
   const headers = {
@@ -18,7 +18,7 @@ exports.handler = async (event) => {
     "Access-Control-Allow-Methods": "POST, OPTIONS",
   };
 
-  // Manejo de peticiones CORS preflight
+  // 1. Control de Preflight CORS
   if (event.httpMethod === "OPTIONS") {
     return { statusCode: 204, headers, body: "" };
   }
@@ -31,18 +31,20 @@ exports.handler = async (event) => {
     };
   }
 
+  // 2. Validación de Credenciales
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
     return {
       statusCode: 500,
       headers,
       body: JSON.stringify({
-        error: "Falta configurar GEMINI_API_KEY en las variables de entorno de Netlify.",
+        error: "Falta GEMINI_API_KEY en Netlify.",
         version: VERSION_MASTER
       }),
     };
   }
 
+  // 3. Parseo Seguro del Body
   let payload;
   try {
     payload = JSON.parse(event.body || "{}");
@@ -50,7 +52,7 @@ exports.handler = async (event) => {
     return {
       statusCode: 400,
       headers,
-      body: JSON.stringify({ error: "El cuerpo de la solicitud no es un JSON válido.", version: VERSION_MASTER }),
+      body: JSON.stringify({ error: "JSON inválido enviado por el cliente.", version: VERSION_MASTER }),
     };
   }
 
@@ -60,21 +62,21 @@ exports.handler = async (event) => {
     return {
       statusCode: 400,
       headers,
-      body: JSON.stringify({ error: "Falta el arreglo de 'messages' en la solicitud.", version: VERSION_MASTER }),
+      body: JSON.stringify({ error: "Falta el arreglo 'messages'.", version: VERSION_MASTER }),
     };
   }
 
   try {
-    // Inicializamos el SDK de Google de forma nativa y ultra segura
+    // Inicialización explícita y robusta del SDK de Google
     const ai = new GoogleGenAI({ apiKey: apiKey });
 
-    // Traducimos el historial del chat al formato esperado por el SDK (user / model)
+    // Mapeo seguro del historial de mensajes al formato de Google (user / model)
     const contents = messages.map(msg => ({
       role: msg.role === "assistant" ? "model" : "user",
-      parts: [{ text: msg.content }]
+      parts: [{ text: msg.content || "" }]
     }));
 
-    // Ejecutamos la llamada directa utilizando la arquitectura optimizada de Google
+    // Ejecución de la solicitud usando la API unificada
     const response = await ai.models.generateContent({
       model: "gemini-2.5-flash",
       contents: contents,
@@ -84,11 +86,11 @@ exports.handler = async (event) => {
       }
     });
 
-    // Extraemos el texto limpio procesado por la librería oficial
-    const textResult = response.text || "No se recibió respuesta del modelo.";
+    // Extracción limpia del string de respuesta
+    const textResult = response.text || "Respuesta vacía.";
 
-    // Mapeamos la salida imitando el formato clásico de Anthropic para tu frontend
-    const anthropicFormatResponse = {
+    // Estructura idéntica al formato clásico de Anthropic para que tu frontend no diga "No pude procesar."
+    const responsePayload = {
       content: [
         {
           type: "text",
@@ -101,17 +103,22 @@ exports.handler = async (event) => {
     return {
       statusCode: 200,
       headers,
-      body: JSON.stringify(anthropicFormatResponse),
+      body: JSON.stringify(responsePayload),
     };
 
   } catch (err) {
-    // Si la infraestructura falla, el SDK nos proveerá el código y descripción exactos
+    // Captura explícita del error para que no muera en silencio el servidor
     return {
-      statusCode: 500,
+      statusCode: 200, // Forzamos 200 para inyectar el error directamente en el texto del chat y poder leerlo
       headers,
-      body: JSON.stringify({ 
-        error: "Error crítico en el backend del SDK de Gemini: " + err.message,
-        version: VERSION_MASTER 
+      body: JSON.stringify({
+        content: [
+          {
+            type: "text",
+            text: `[Error Servidor V3.1]: ${err.message}. Verifica las variables en Netlify.`
+          }
+        ],
+        backend_version: VERSION_MASTER
       }),
     };
   }
